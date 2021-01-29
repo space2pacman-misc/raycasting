@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Raycasting</title>
+</head>
+<body>
+	<style>
+		#canvas {
+			border: 1px solid black;
+		}
+	</style>
+
+	<canvas id="canvas" width="400" height="300"></canvas>
+	
+	<script>
+		let canvas = document.querySelector("#canvas");
+		let ctx = canvas.getContext("2d");
+		let map = {
+			value: [
+				[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+				[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+				[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+				[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+				[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+				[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+				[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+				[1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1],
+				[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+				[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+				[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+				[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+				[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+				[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+				[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+			],
+			size: 20,
+			width: 0,
+			height: 0
+		}
+
+		let player = {
+			x: 2,
+			y: 2,
+			direction: 0,
+			rotation: 0,
+			speed: 0,
+			moveSpeed: 0.18,
+			rotationSpeed: 0.1
+		}
+
+		function init() {
+			map.width = map.value[0].length;
+			map.height = map.value.length;
+
+			bindKeys();
+			drawMap();
+			gameCycle();
+		}
+
+		function bindKeys() {
+			document.addEventListener("keydown", e => {
+				switch(e.keyCode) {
+					case 38:
+						player.speed = 1;
+
+						break;
+					case 40:
+						player.speed = -1;
+
+						break;
+					case 37:
+						player.direction = -1;
+
+						break;
+					case 39:
+						player.direction = 1;
+
+						break;
+				}
+			})
+
+			document.addEventListener("keyup", e => {
+				switch(e.keyCode) {
+					case 38:
+					case 40:
+						player.speed = 0;
+
+						break;
+					case 37:
+					case 39:
+						player.direction = 0;
+
+						break;
+				}
+			})
+		}
+
+		function drawMap() {
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+			for(let i = 0; i < map.height; i++) {
+				for(let j = 0; j < map.width; j++) {
+					switch(map.value[i][j]) {
+						case 1:
+							ctx.fillStyle = "rgb(200, 200, 200)";
+							ctx.fillRect(j * map.size, i * map.size, map.size, map.size);
+
+							break;
+					}
+				}
+			}
+
+			ctx.fillStyle = "rgb(255, 100, 120)";
+			ctx.fillRect(player.x * map.size - 5, player.y * map.size - 5, 10, 10);
+
+			ctx.beginPath();
+			ctx.moveTo(player.x * map.size, player.y * map.size);
+			ctx.lineTo((player.x + Math.cos(player.rotation) * 2) * map.size, (player.y + Math.sin(player.rotation) * 2) * map.size);
+			ctx.closePath();
+			ctx.stroke();
+		}
+
+		function move() {
+			let moveStep = player.speed * player.moveSpeed;
+			let newX = player.x + Math.cos(player.rotation) * moveStep;
+			let newY = player.y + Math.sin(player.rotation) * moveStep;
+			
+			player.rotation += player.direction * player.rotationSpeed;
+
+			if(isBlocking(newX, newY)) {
+				return;
+			}
+
+			player.x = newX;
+			player.y = newY;
+		}
+
+		function isBlocking(x, y) {
+			if(y < 0 || y >= map.height || x < 0 || x >= map.width) {
+				return true;
+			} else {
+				return map.value[Math.floor(y)][Math.floor(x)] !== 0;
+			}
+		}
+
+		function gameCycle() {
+			move();
+			drawMap();
+			setTimeout(gameCycle, 1000 / 30);
+		}
+
+		init();
+	</script>
+</body>
+</html>
